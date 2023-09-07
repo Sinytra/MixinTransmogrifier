@@ -1,16 +1,12 @@
 package io.github.steelwoolmc.mixintransmog;
 
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
-import net.minecraftforge.fml.loading.FMLPaths;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.ClassRemapper;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,8 +17,6 @@ import static io.github.steelwoolmc.mixintransmog.Constants.LOG;
  * (i.e. `org.spongepowered` -> `shadow.spongepowered`)
  */
 public class ShadedMixinPluginService implements ILaunchPluginService {
-	private static final Path debugOutFolder = FMLPaths.getOrCreateGameRelativePath(Path.of(".transmog_debug"));
-
 	@Override
 	public String name() {
 		return "mixin-transmogrifier";
@@ -39,7 +33,7 @@ public class ShadedMixinPluginService implements ILaunchPluginService {
 			return false;
 		}
 
-		LOG.debug("Processing mixin class: " + classNode.name);
+		LOG.trace("Processing mixin class: " + classNode.name);
 		ClassNode duplicateNode = new ClassNode();
 		AtomicBoolean hasMapped = new AtomicBoolean(false);
 		ClassRemapper remapper = new ClassRemapper(duplicateNode, new Remapper() {
@@ -94,11 +88,6 @@ public class ShadedMixinPluginService implements ILaunchPluginService {
 		ClassWriter writer = new ClassWriter(0);
 		classNode.accept(writer);
 
-		try {
-			Files.write(debugOutFolder.resolve(classNode.name.replace("/", ".") + ".class"), writer.toByteArray());
-		} catch (IOException e) {
-			LOG.error("Error exporting transmog output", e);
-		}
 		return true;
 	}
 
