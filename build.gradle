@@ -25,12 +25,14 @@ minecraft {
 
 configurations {
     shadedImplementation { transitive = false }
-    implementation.extendsFrom(shadedImplementation)
+    fabricMixin { transitive = false }
+    implementation.extendsFrom(shadedImplementation, fabricMixin)
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    shadedImplementation "net.fabricmc:sponge-mixin:${mixin_version}"
+    shadedImplementation "net.bytebuddy:byte-buddy-agent:1.14.5"
+    fabricMixin "net.fabricmc:sponge-mixin:${mixin_version}"
 }
 
 jar {
@@ -47,29 +49,34 @@ shadowJar {
     // Exclude dependency licenses since we include them ourselves
     exclude "**/LICENSE*"
     exclude "**/NOTICE*"
-    // Relocate mixin packages
-    relocate "org.spongepowered", "io.github.steelwoolmc.shadow.spongepowered"
-    relocate "shadowignore.org.spongepowered", "org.spongepowered"
-    // Relocate service files
-    mergeServiceFiles {
-        // Remove mixin's transformation service
-        exclude "META-INF/services/cpw.mods.modlauncher.api.ITransformationService"
-    }
-    // Remove mixin's launch plugin service
-    exclude "META-INF/services/cpw.mods.modlauncher.serviceapi.ILaunchPluginService"
+    exclude "**/*.dll"
+    exclude "win32-x86"
+    exclude "win32-x86-64"
+    exclude "META-INF/maven/**"
+    exclude "META-INF/versions/**"
 
-    archiveClassifier = ""
+    archiveClassifier = "shadow"
     configurations = [project.configurations.shadedImplementation]
 }
 
-assemble.dependsOn shadowJar
+tasks.register("fullJar", org.gradle.jvm.tasks.Jar) {
+    dependsOn(shadowJar)
+    manifest.from(jar.manifest)
+    from(zipTree(shadowJar.archiveFile))
+    from(provider { configurations.fabricMixin.singleFile }) {
+        rename { "fabric-mixin.jar" }
+    }
+    archiveClassifier = ""
+}
+
+assemble.dependsOn fullJar
 
 // Replace published jar artifact with shadowJar 
 configurations {
     [runtimeElements, apiElements].each {
         it.outgoing {
             artifacts.clear()
-            artifact(shadowJar)
+            artifact(fullJar)
         }
     }
 }

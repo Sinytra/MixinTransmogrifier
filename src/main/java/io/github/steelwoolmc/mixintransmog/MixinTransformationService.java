@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static io.github.steelwoolmc.mixintransmog.Constants.LOG;
 
@@ -49,9 +48,6 @@ public class MixinTransformationService implements ITransformationService {
             // Replace original mixin with our mixin
             plugins.put("mixin", new MixinLaunchPlugin());
             LOG.debug("Replaced the mixin launch plugin");
-
-            // Launch plugin services are only loaded from the BOOT layer, so we must inject ours manually
-            plugins.computeIfAbsent("mixin-transmogrifier", key -> new ShadedMixinPluginService());
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -59,6 +55,12 @@ public class MixinTransformationService implements ITransformationService {
 
     public MixinTransformationService() {
         LOG.info("Mixin Transmogrifier is definitely up to no good...");
+        try {
+            InstrumentationHack.inject();
+        } catch (Throwable t) {
+            LOG.error("Error replacing mixin module source", t);
+            throw new RuntimeException(t);
+        }
         replaceMixinLaunchPlugin();
         LOG.info("crimes against java were committed");
     }
@@ -71,7 +73,7 @@ public class MixinTransformationService implements ITransformationService {
     @Override
     public void onLoad(IEnvironment env, Set<String> otherServices) {
         LOG.debug("onLoad called");
-        LOG.debug(otherServices.stream().collect(Collectors.joining(", ")));
+        LOG.debug(String.join(", ", otherServices));
 
         try {
             Field handlerField = Launcher.class.getDeclaredField("transformationServicesHandler");
