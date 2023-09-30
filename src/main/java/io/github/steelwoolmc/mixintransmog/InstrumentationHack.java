@@ -10,7 +10,9 @@ import sun.misc.Unsafe;
 import java.io.InputStream;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.invoke.VarHandle;
 import java.lang.module.ModuleDescriptor;
 import java.lang.module.ModuleReference;
@@ -29,7 +31,6 @@ import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.uncheck;
 import static io.github.steelwoolmc.mixintransmog.Constants.LOG;
 
 public final class InstrumentationHack {
-    private static final Instrumentation INSTRUMENTATION = ByteBuddyAgent.install();
     private static final MethodHandles.Lookup TRUSTED_LOOKUP = uncheck(() -> {
         Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
         theUnsafe.setAccessible(true);
@@ -44,6 +45,14 @@ public final class InstrumentationHack {
     private static final String MIXIN_MODULE = "org.spongepowered.mixin";
 
     public static void inject() throws Throwable {
+        Instrumentation instrumentation;
+        try {
+            instrumentation = ByteBuddyAgent.install();
+        } catch (Throwable t) {
+            LOG.error("Error attaching agent, things might break!", t);
+            instrumentation = null;
+        }
+
         Path mixinJarPath = SELF_PATH.resolve("fabric-mixin.jar");
         SecureJar mixinJar = SecureJar.from(mixinJarPath);
 
@@ -65,7 +74,12 @@ public final class InstrumentationHack {
         Field locationField = ModuleReference.class.getDeclaredField("location");
         UnsafeHacks.setField(locationField, reference, mixinJar.getRootPath().toUri());
         // Add readability edge to the unnamed module, where classes from added packages are defined
-        INSTRUMENTATION.redefineModule(mixinModule, Set.of(mixinModule.getClassLoader().getUnnamedModule()), Map.of(), Map.of(), Set.of(), Map.of());
+        if (instrumentation != null) {
+            instrumentation.redefineModule(mixinModule, Set.of(mixinModule.getClassLoader().getUnnamedModule()), Map.of(), Map.of(), Set.of(), Map.of());
+        } else {
+            MethodHandle handle = TRUSTED_LOOKUP.findVirtual(Module.class, "implAddReads", MethodType.methodType(void.class, Module.class));
+            handle.invokeExact(mixinModule, mixinModule.getClassLoader().getUnnamedModule());
+        }
 
         Set<String> mixinPackages = mixinJar.getPackages();
         // Good riddance, certs
@@ -86,17 +100,19 @@ public final class InstrumentationHack {
         }
 
         // Redefine existing classes
-        ClassLoader bootClassLoader = Launcher.class.getClassLoader();
-        List<ClassDefinition> redefinitions = new ArrayList<>();
-        for (Class<?> cls : INSTRUMENTATION.getInitiatedClasses(bootClassLoader)) {
-            if (mixinPackages.contains(cls.getPackageName())) {
-                String path = cls.getName().replace('.', '/') + ".class";
-                mixinJar.moduleDataProvider().open(path)
-                    .map(rethrowFunction(InputStream::readAllBytes))
-                    .ifPresent(bytes -> redefinitions.add(new ClassDefinition(cls, bytes)));
+        if (instrumentation != null) {
+            ClassLoader bootClassLoader = Launcher.class.getClassLoader();
+            List<ClassDefinition> redefinitions = new ArrayList<>();
+            for (Class<?> cls : instrumentation.getInitiatedClasses(bootClassLoader)) {
+                if (mixinPackages.contains(cls.getPackageName())) {
+                    String path = cls.getName().replace('.', '/') + ".class";
+                    mixinJar.moduleDataProvider().open(path)
+                        .map(rethrowFunction(InputStream::readAllBytes))
+                        .ifPresent(bytes -> redefinitions.add(new ClassDefinition(cls, bytes)));
+                }
             }
+            LOG.info("Redefining {} mixin classes", redefinitions.size());
+            instrumentation.redefineClasses(redefinitions.toArray(ClassDefinition[]::new));
         }
-        LOG.info("Redefining {} mixin classes", redefinitions.size());
-        INSTRUMENTATION.redefineClasses(redefinitions.toArray(ClassDefinition[]::new));
     }
 }
