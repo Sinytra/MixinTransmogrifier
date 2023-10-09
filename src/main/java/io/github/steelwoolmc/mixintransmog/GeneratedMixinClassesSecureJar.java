@@ -1,6 +1,7 @@
 package io.github.steelwoolmc.mixintransmog;
 
 import cpw.mods.jarhandling.SecureJar;
+import net.minecraftforge.fml.loading.LoadingModList;
 import org.spongepowered.asm.util.Constants;
 
 import java.io.InputStream;
@@ -29,8 +30,10 @@ public class GeneratedMixinClassesSecureJar implements SecureJar {
         public ModuleDescriptor descriptor() {
             if (descriptor == null) {
                 String argsPkg = Constants.SYNTHETIC_PACKAGE + ".args";
+                boolean exists = LoadingModList.get().getModFiles().stream()
+                    .anyMatch(modFileInfo -> modFileInfo.getFile().getSecureJar().getPackages().contains(argsPkg));
                 descriptor = ModuleDescriptor.newAutomaticModule(name())
-                    .packages(Set.of(Constants.SYNTHETIC_PACKAGE, argsPkg))
+                    .packages(exists ? Set.of() : Set.of(Constants.SYNTHETIC_PACKAGE, argsPkg))
                     .build();
             }
             return descriptor;
