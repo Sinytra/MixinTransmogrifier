@@ -27,11 +27,15 @@ repositories {
         name = 'Fabric'
         url = 'https://maven.fabricmc.net/'
     }
+    maven {
+        name = 'Sinytra'
+        url = 'https://maven.su5ed.dev/releases/'
+    }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    fabricMixin "net.fabricmc:sponge-mixin:${mixin_version}"
+    fabricMixin "dev.su5ed.sinytra:sponge-mixin:${mixin_version}"
 }
 
 jar {
