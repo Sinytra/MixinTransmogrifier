@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.github.steelwoolmc.mixintransmog.Constants.LOG;
 
@@ -60,6 +61,8 @@ public class MixinTransformationService implements ITransformationService {
         }
     }
 
+    private final AtomicBoolean shouldLoad = new AtomicBoolean(false);
+
     public MixinTransformationService() {
         final var env = Launcher.INSTANCE.environment();
         final var installed = env.computePropertyIfAbsent(INSTALLED_VERSIONS, k -> Collections.synchronizedMap(new LinkedHashMap<>()));
@@ -68,7 +71,7 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public String name() {
-        return "mixin-transmogrifier";
+        return "mixin-transmogrifier-" + getClass().getPackageName().replace('.', '-');
     }
 
     @Override
@@ -82,6 +85,7 @@ public class MixinTransformationService implements ITransformationService {
             LOG.info("Mixin Transmogrifier {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
             return;
         }
+        shouldLoad.set(true);
 
         LOG.info("Mixin Transmogrifier {} is definitely up to no good...", getClass().getName());
         try {
@@ -118,6 +122,8 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public void initialize(IEnvironment environment) {
+        if (!shouldLoad.get()) return;
+
         try {
             LOG.debug("initialize called");
 
@@ -146,6 +152,8 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public List<Resource> beginScanning(IEnvironment environment) {
+        if (!shouldLoad.get()) return List.of();
+
         // Add mixin remapper after the naming service has been initialized
         if (!FMLEnvironment.production) {
             MixinEnvironment.getDefaultEnvironment().getRemappers().add(new MixinModlauncherRemapper());
