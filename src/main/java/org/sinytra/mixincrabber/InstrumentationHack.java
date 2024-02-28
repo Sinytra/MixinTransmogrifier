@@ -1,4 +1,4 @@
-package io.github.steelwoolmc.mixintransmog;
+package org.sinytra.mixincrabber;
 
 import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.jarhandling.SecureJar;
@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.uncheck;
-import static io.github.steelwoolmc.mixintransmog.Constants.LOG;
+import static org.sinytra.mixincrabber.Constants.LOG;
 
 public final class InstrumentationHack {
     private static final MethodHandles.Lookup TRUSTED_LOOKUP = uncheck(() -> {

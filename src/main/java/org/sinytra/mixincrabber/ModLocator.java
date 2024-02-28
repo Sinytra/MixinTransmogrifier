@@ -1,4 +1,4 @@
-package io.github.steelwoolmc.mixintransmog;
+package org.sinytra.mixincrabber;
 
 import net.minecraftforge.fml.loading.moddiscovery.AbstractJarFileModLocator;
 

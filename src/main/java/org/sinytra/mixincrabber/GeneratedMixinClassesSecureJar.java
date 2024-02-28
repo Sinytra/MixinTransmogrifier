@@ -1,4 +1,4 @@
-package io.github.steelwoolmc.mixintransmog;
+package org.sinytra.mixincrabber;
 
 import cpw.mods.jarhandling.SecureJar;
 import net.minecraftforge.fml.loading.LoadingModList;

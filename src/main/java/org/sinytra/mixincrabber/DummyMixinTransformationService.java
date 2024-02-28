@@ -1,4 +1,4 @@
-package io.github.steelwoolmc.mixintransmog;
+package org.sinytra.mixincrabber;
 
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformationService;

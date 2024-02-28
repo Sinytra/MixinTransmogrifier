@@ -12,4 +12,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'mixin-transmogrifier'
+rootProject.name = 'mixin-crabber'

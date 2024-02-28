@@ -1,4 +1,4 @@
-package io.github.steelwoolmc.mixintransmog;
+package org.sinytra.mixincrabber;
 
 import cpw.mods.modlauncher.LaunchPluginHandler;
 import cpw.mods.modlauncher.Launcher;
@@ -28,11 +28,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static io.github.steelwoolmc.mixintransmog.Constants.LOG;
-
 public class MixinTransformationService implements ITransformationService {
     public static final TypesafeMap.Key<Map<Class<?>, ArtifactVersion>> INSTALLED_VERSIONS =
-            new TypesafeMap.KeyBuilder<Map<Class<?>, ArtifactVersion>>("org.sinytra.mixintransmog.installed_versions", Map.class, IEnvironment.class).get();
+            new TypesafeMap.KeyBuilder<Map<Class<?>, ArtifactVersion>>("org.sinytra.mixincrabber.installed_versions", Map.class, IEnvironment.class).get();
 
     /**
      * Replace the original mixin launch plugin
@@ -55,7 +53,7 @@ public class MixinTransformationService implements ITransformationService {
 
             // Replace original mixin with our mixin
             plugins.put("mixin", new MixinLaunchPlugin());
-            LOG.debug("Replaced the mixin launch plugin");
+            Constants.LOG.debug("Replaced the mixin launch plugin");
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -71,7 +69,7 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public String name() {
-        return "mixin-transmogrifier-" + getClass().getPackageName().replace('.', '-');
+        return "mixin-crabber-" + getClass().getPackageName().replace('.', '-');
     }
 
     @Override
@@ -82,23 +80,23 @@ public class MixinTransformationService implements ITransformationService {
                 .findFirst()
                 .orElseThrow();
         if (winner.getKey() != getClass()) {
-            LOG.info("Mixin Transmogrifier {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
+            Constants.LOG.info("Mixin Crabber {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
             return;
         }
         SHOULD_LOAD.set(true);
 
-        LOG.info("Mixin Transmogrifier {} is definitely up to no good...", getClass().getName());
+        Constants.LOG.info("Mixin Crabber {} is definitely up to no good...", getClass().getName());
         try {
             InstrumentationHack.inject();
         } catch (Throwable t) {
-            LOG.error("Error replacing mixin module source", t);
+            Constants.LOG.error("Error replacing mixin module source", t);
             throw new RuntimeException(t);
         }
         replaceMixinLaunchPlugin();
-        LOG.info("Crimes against java were committed by {}", getClass().getName());
+        Constants.LOG.info("Crimes against java were committed by {}", getClass().getName());
 
-        LOG.debug("onLoad called");
-        LOG.debug(String.join(", ", otherServices));
+        Constants.LOG.debug("onLoad called");
+        Constants.LOG.debug(String.join(", ", otherServices));
 
         try {
             Field handlerField = Launcher.class.getDeclaredField("transformationServicesHandler");
@@ -125,7 +123,7 @@ public class MixinTransformationService implements ITransformationService {
         if (!SHOULD_LOAD.get()) return;
 
         try {
-            LOG.debug("initialize called");
+            Constants.LOG.debug("initialize called");
 
             var mixinBootstrapStartMethod = MixinBootstrap.class.getDeclaredMethod("start");
             mixinBootstrapStartMethod.setAccessible(true);
