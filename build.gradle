@@ -22,6 +22,11 @@ configurations {
     implementation.extendsFrom(shadedImplementation, fabricMixin)
 }
 
+processResources {
+    inputs.property('version', project.version)
+    expand([version: project.version])
+}
+
 repositories {
     maven {
         name = 'Fabric'

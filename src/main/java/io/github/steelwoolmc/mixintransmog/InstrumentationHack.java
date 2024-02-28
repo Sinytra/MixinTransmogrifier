@@ -31,7 +31,7 @@ public final class InstrumentationHack {
         Field hackfield = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
         return (MethodHandles.Lookup) unsafe.getObject(unsafe.staticFieldBase(hackfield), unsafe.staticFieldOffset(hackfield));
     });
-    private static final Path SELF_PATH = uncheck(() -> {
+    public static final Path SELF_PATH = uncheck(() -> {
         URL jarLocation = InstrumentationHack.class.getProtectionDomain().getCodeSource().getLocation();
         return Path.of(jarLocation.toURI());
     });

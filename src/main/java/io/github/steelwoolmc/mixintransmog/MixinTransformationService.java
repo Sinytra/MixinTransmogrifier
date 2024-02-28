@@ -7,8 +7,10 @@ import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.IModuleLayerManager;
 import cpw.mods.modlauncher.api.ITransformationService;
 import cpw.mods.modlauncher.api.ITransformer;
+import cpw.mods.modlauncher.api.TypesafeMap;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.spongepowered.asm.launch.MixinBootstrap;
 import org.spongepowered.asm.launch.MixinLaunchPlugin;
 import org.spongepowered.asm.launch.MixinLaunchPluginLegacy;
@@ -18,6 +20,8 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +30,9 @@ import java.util.Set;
 import static io.github.steelwoolmc.mixintransmog.Constants.LOG;
 
 public class MixinTransformationService implements ITransformationService {
+    public static final TypesafeMap.Key<Map<Class<?>, ArtifactVersion>> INSTALLED_VERSIONS =
+            new TypesafeMap.KeyBuilder<Map<Class<?>, ArtifactVersion>>("org.sinytra.mixintransmog.installed_versions", Map.class, IEnvironment.class).get();
+
     /**
      * Replace the original mixin launch plugin
      */
@@ -54,15 +61,9 @@ public class MixinTransformationService implements ITransformationService {
     }
 
     public MixinTransformationService() {
-        LOG.info("Mixin Transmogrifier is definitely up to no good...");
-        try {
-            InstrumentationHack.inject();
-        } catch (Throwable t) {
-            LOG.error("Error replacing mixin module source", t);
-            throw new RuntimeException(t);
-        }
-        replaceMixinLaunchPlugin();
-        LOG.info("crimes against java were committed");
+        final var env = Launcher.INSTANCE.environment();
+        final var installed = env.computePropertyIfAbsent(INSTALLED_VERSIONS, k -> Collections.synchronizedMap(new LinkedHashMap<>()));
+        installed.put(getClass(), Constants.VERSION);
     }
 
     @Override
@@ -72,6 +73,26 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public void onLoad(IEnvironment env, Set<String> otherServices) {
+        final var winner = env.getProperty(INSTALLED_VERSIONS).orElseThrow()
+                .entrySet()
+                .stream().sorted(Map.Entry.<Class<?>, ArtifactVersion>comparingByValue().reversed())
+                .findFirst()
+                .orElseThrow();
+        if (winner.getKey() != getClass()) {
+            LOG.info("Mixin Transmogrifier {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
+            return;
+        }
+
+        LOG.info("Mixin Transmogrifier is definitely up to no good...");
+        try {
+            InstrumentationHack.inject();
+        } catch (Throwable t) {
+            LOG.error("Error replacing mixin module source", t);
+            throw new RuntimeException(t);
+        }
+        replaceMixinLaunchPlugin();
+        LOG.info("crimes against java were committed");
+
         LOG.debug("onLoad called");
         LOG.debug(String.join(", ", otherServices));
 
