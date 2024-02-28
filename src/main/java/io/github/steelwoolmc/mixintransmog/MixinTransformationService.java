@@ -61,7 +61,7 @@ public class MixinTransformationService implements ITransformationService {
         }
     }
 
-    private final AtomicBoolean shouldLoad = new AtomicBoolean(false);
+    public static final AtomicBoolean SHOULD_LOAD = new AtomicBoolean(false);
 
     public MixinTransformationService() {
         final var env = Launcher.INSTANCE.environment();
@@ -85,7 +85,7 @@ public class MixinTransformationService implements ITransformationService {
             LOG.info("Mixin Transmogrifier {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
             return;
         }
-        shouldLoad.set(true);
+        SHOULD_LOAD.set(true);
 
         LOG.info("Mixin Transmogrifier {} is definitely up to no good...", getClass().getName());
         try {
@@ -122,7 +122,7 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public void initialize(IEnvironment environment) {
-        if (!shouldLoad.get()) return;
+        if (!SHOULD_LOAD.get()) return;
 
         try {
             LOG.debug("initialize called");
@@ -152,13 +152,15 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public List<Resource> beginScanning(IEnvironment environment) {
-        if (!shouldLoad.get()) return List.of();
+        if (!SHOULD_LOAD.get()) return List.of();
 
         // Add mixin remapper after the naming service has been initialized
         if (!FMLEnvironment.production) {
             MixinEnvironment.getDefaultEnvironment().getRemappers().add(new MixinModlauncherRemapper());
         }
-        return List.of(new Resource(IModuleLayerManager.Layer.GAME, List.of(new GeneratedMixinClassesSecureJar())));
+        return List.of(
+                new Resource(IModuleLayerManager.Layer.GAME, List.of(new GeneratedMixinClassesSecureJar()))
+        );
     }
 
     @Override

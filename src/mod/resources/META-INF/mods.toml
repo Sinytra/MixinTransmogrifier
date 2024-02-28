@@ -1,0 +1,11 @@
+modLoader="lowcodefml"
+loaderVersion="[1,)"
+license="MIT"
+[[mods]]
+modId="mixincrabber"
+version="${file.jarVersion}}"
+displayName="Mixin Crabber"
+description='''
+Fabric Mixin on Forge
+No more pain or suffering for mod developers
+'''
