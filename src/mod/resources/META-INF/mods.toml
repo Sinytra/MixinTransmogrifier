@@ -9,3 +9,5 @@ description='''
 Fabric Mixin on Forge
 No more pain or suffering for mod developers
 '''
+authors="The Sinytra Developers"
+credits="CursedFlames for the original Mixin Transmorgifier, the Fabric team for their version of Mixin"
