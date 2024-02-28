@@ -83,7 +83,7 @@ public class MixinTransformationService implements ITransformationService {
             return;
         }
 
-        LOG.info("Mixin Transmogrifier is definitely up to no good...");
+        LOG.info("Mixin Transmogrifier {} is definitely up to no good...", getClass().getName());
         try {
             InstrumentationHack.inject();
         } catch (Throwable t) {
@@ -91,7 +91,7 @@ public class MixinTransformationService implements ITransformationService {
             throw new RuntimeException(t);
         }
         replaceMixinLaunchPlugin();
-        LOG.info("crimes against java were committed");
+        LOG.info("Crimes against java were committed by {}", getClass().getName());
 
         LOG.debug("onLoad called");
         LOG.debug(String.join(", ", otherServices));

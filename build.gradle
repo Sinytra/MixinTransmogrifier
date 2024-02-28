@@ -14,12 +14,19 @@ java {
 
 minecraft {
     mappings channel: 'official', version: minecraft_version
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+        }
+        client {}
+    }
 }
 
 configurations {
     shadedImplementation { transitive = false }
     fabricMixin { transitive = false }
-    implementation.extendsFrom(shadedImplementation, fabricMixin)
+    implementation.extendsFrom(shadedImplementation)
+    compileOnly.extendsFrom(fabricMixin)
 }
 
 processResources {
@@ -38,9 +45,12 @@ repositories {
     }
 }
 
+final fullJar = tasks.register("fullJar", org.gradle.jvm.tasks.Jar)
+
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     fabricMixin "dev.su5ed.sinytra:sponge-mixin:${mixin_version}"
+    runtimeOnly(files(fullJar.map { it.archiveFile }))
 }
 
 jar {
@@ -64,7 +74,7 @@ shadowJar {
     configurations = [project.configurations.shadedImplementation]
 }
 
-tasks.register("fullJar", org.gradle.jvm.tasks.Jar) {
+fullJar.configure {
     dependsOn(shadowJar)
     manifest.from(jar.manifest)
     from(zipTree(shadowJar.archiveFile))
