@@ -1,4 +1,4 @@
-package org.sinytra.mixincrabber;
+package org.sinytra.mixinbooster;
 
 import cpw.mods.modlauncher.api.IEnvironment;
 import cpw.mods.modlauncher.api.ITransformationService;
@@ -18,7 +18,7 @@ public class DummyMixinTransformationService implements ITransformationService {
 
     @Override
     public void initialize(IEnvironment environment) {
-        Constants.LOG.info("Original mixin transformation service successfully crobbed by mixin-transmogrifier!");
+        Constants.LOG.info("Original mixin transformation service successfully crobbed by mixin-booster!");
     }
 
     @Override

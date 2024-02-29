@@ -1,4 +1,4 @@
-package org.sinytra.mixincrabber;
+package org.sinytra.mixinbooster;
 
 import cpw.mods.modlauncher.LaunchPluginHandler;
 import cpw.mods.modlauncher.Launcher;
@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MixinTransformationService implements ITransformationService {
     public static final TypesafeMap.Key<Map<Class<?>, ArtifactVersion>> INSTALLED_VERSIONS =
-            new TypesafeMap.KeyBuilder<Map<Class<?>, ArtifactVersion>>("org.sinytra.mixincrabber.installed_versions", Map.class, IEnvironment.class).get();
+            new TypesafeMap.KeyBuilder<Map<Class<?>, ArtifactVersion>>("org.sinytra.mixinbooster.installed_versions", Map.class, IEnvironment.class).get();
 
     /**
      * Replace the original mixin launch plugin
@@ -69,7 +69,7 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public String name() {
-        return "mixin-crabber-" + getClass().getPackageName().replace('.', '-');
+        return "mixin-booster-" + getClass().getPackageName().replace('.', '-');
     }
 
     @Override
@@ -80,12 +80,12 @@ public class MixinTransformationService implements ITransformationService {
                 .findFirst()
                 .orElseThrow();
         if (winner.getKey() != getClass()) {
-            Constants.LOG.info("Mixin Crabber {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
+            Constants.LOG.info("Mixin Booster {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
             return;
         }
         SHOULD_LOAD.set(true);
 
-        Constants.LOG.info("Mixin Crabber {} is definitely up to no good...", getClass().getName());
+        Constants.LOG.info("Mixin Booster {} is definitely up to no good...", getClass().getName());
         try {
             InstrumentationHack.inject();
         } catch (Throwable t) {

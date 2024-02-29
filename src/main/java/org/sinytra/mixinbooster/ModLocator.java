@@ -1,4 +1,4 @@
-package org.sinytra.mixincrabber;
+package org.sinytra.mixinbooster;
 
 import net.minecraftforge.fml.loading.moddiscovery.AbstractJarFileModLocator;
 
@@ -17,7 +17,7 @@ public class ModLocator extends AbstractJarFileModLocator {
 
     @Override
     public String name() {
-        return "mixin-crabber-locator-" + getClass().getPackageName().replace('.', '-');
+        return "mixin-booster-locator-" + getClass().getPackageName().replace('.', '-');
     }
 
     @Override

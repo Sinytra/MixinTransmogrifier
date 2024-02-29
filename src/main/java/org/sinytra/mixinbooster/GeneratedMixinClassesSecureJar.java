@@ -1,4 +1,4 @@
-package org.sinytra.mixincrabber;
+package org.sinytra.mixinbooster;
 
 import cpw.mods.jarhandling.SecureJar;
 import net.minecraftforge.fml.loading.LoadingModList;

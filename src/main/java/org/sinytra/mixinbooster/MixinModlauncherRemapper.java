@@ -1,4 +1,4 @@
-package org.sinytra.mixincrabber;
+package org.sinytra.mixinbooster;
 
 import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.api.INameMappingService;

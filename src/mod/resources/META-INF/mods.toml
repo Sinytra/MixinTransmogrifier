@@ -2,12 +2,12 @@ modLoader="lowcodefml"
 loaderVersion="[1,)"
 license="MIT"
 [[mods]]
-modId="mixincrabber"
+modId="mixinbooster"
 version="${file.jarVersion}"
-displayName="Mixin Crabber"
+displayName="Mixin Booster"
 description='''
 Fabric Mixin on Forge
 No more pain or suffering for mod developers
 '''
-authors="The Sinytra Developers"
+authors="Su5ed, Matyrobbrt"
 credits="CursedFlames for the original Mixin Transmorgifier, the Fabric team for their version of Mixin"

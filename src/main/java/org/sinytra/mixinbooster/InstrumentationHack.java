@@ -1,4 +1,4 @@
-package org.sinytra.mixincrabber;
+package org.sinytra.mixinbooster;
 
 import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.jarhandling.SecureJar;
@@ -21,7 +21,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static cpw.mods.modlauncher.api.LamdbaExceptionUtils.uncheck;
-import static org.sinytra.mixincrabber.Constants.LOG;
+import static org.sinytra.mixinbooster.Constants.LOG;
 
 public final class InstrumentationHack {
     private static final MethodHandles.Lookup TRUSTED_LOOKUP = uncheck(() -> {
