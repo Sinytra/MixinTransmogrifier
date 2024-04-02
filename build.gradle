@@ -35,7 +35,7 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-    fabricMixin "dev.su5ed.sinytra:sponge-mixin:${mixin_version}"
+    fabricMixin "org.sinytra:sponge-mixin:${mixin_version}"
 }
 
 jar {
