@@ -5,6 +5,7 @@ import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.TransformationServiceDecorator;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
 import net.minecraftforge.fml.loading.FMLEnvironment;
@@ -56,9 +57,9 @@ public class MixinTransformationService implements ITransformationService {
 
     public static final AtomicBoolean SHOULD_LOAD = new AtomicBoolean(false);
 
-    private OptionSpec<String> mixinArgSpec;
-    private OptionSpec<String> mixinConfigArgSpec;
+    private ArgumentAcceptingOptionSpec<String> mixinArgSpec;
     private List<String> capturedArgs;
+    private boolean disguiseName;
 
     public MixinTransformationService() {
         final var env = Launcher.INSTANCE.environment();
@@ -68,21 +69,20 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public String name() {
-        return "mixin-booster-" + getClass().getPackageName().replace('.', '-');
+        return disguiseName ? "mixin" : "mixin-booster-" + getClass().getPackageName().replace('.', '-');
     }
 
     @Override
     public void arguments(BiFunction<String, String, OptionSpecBuilder> argumentBuilder) {
-        mixinArgSpec = argumentBuilder.apply("mixin", "Mixin config file name list").withRequiredArg();
-        mixinConfigArgSpec = argumentBuilder.apply("mixin.config", "Mixin config file name list").withRequiredArg();
+        disguiseName = true;
+        mixinArgSpec = argumentBuilder.apply("config", "a mixin config to load")
+            .withRequiredArg().ofType(String.class);
     }
 
     @Override
     public void argumentValues(OptionResult option) {
-        capturedArgs = Stream.concat(
-            option.values(mixinArgSpec).stream().flatMap(s -> Stream.of("--mixin", s)),
-            option.values(mixinConfigArgSpec).stream().flatMap(s -> Stream.of("--mixin.config", s))
-        ).toList();
+        capturedArgs = option.values(mixinArgSpec);
+        disguiseName = false;
     }
 
     @Override
