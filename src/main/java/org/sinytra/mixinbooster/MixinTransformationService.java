@@ -3,12 +3,10 @@ package org.sinytra.mixinbooster;
 import cpw.mods.modlauncher.LaunchPluginHandler;
 import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.TransformationServiceDecorator;
-import cpw.mods.modlauncher.api.IEnvironment;
-import cpw.mods.modlauncher.api.IModuleLayerManager;
-import cpw.mods.modlauncher.api.ITransformationService;
-import cpw.mods.modlauncher.api.ITransformer;
-import cpw.mods.modlauncher.api.TypesafeMap;
+import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
+import joptsimple.OptionSpec;
+import joptsimple.OptionSpecBuilder;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.spongepowered.asm.launch.MixinBootstrap;
@@ -20,17 +18,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 public class MixinTransformationService implements ITransformationService {
     public static final TypesafeMap.Key<Map<Class<?>, ArtifactVersion>> INSTALLED_VERSIONS =
-            new TypesafeMap.KeyBuilder<Map<Class<?>, ArtifactVersion>>("org.sinytra.mixinbooster.installed_versions", Map.class, IEnvironment.class).get();
+        new TypesafeMap.KeyBuilder<Map<Class<?>, ArtifactVersion>>("org.sinytra.mixinbooster.installed_versions", Map.class, IEnvironment.class).get();
 
     /**
      * Replace the original mixin launch plugin
@@ -61,6 +56,10 @@ public class MixinTransformationService implements ITransformationService {
 
     public static final AtomicBoolean SHOULD_LOAD = new AtomicBoolean(false);
 
+    private OptionSpec<String> mixinArgSpec;
+    private OptionSpec<String> mixinConfigArgSpec;
+    private List<String> capturedArgs;
+
     public MixinTransformationService() {
         final var env = Launcher.INSTANCE.environment();
         final var installed = env.computePropertyIfAbsent(INSTALLED_VERSIONS, k -> Collections.synchronizedMap(new LinkedHashMap<>()));
@@ -73,12 +72,26 @@ public class MixinTransformationService implements ITransformationService {
     }
 
     @Override
+    public void arguments(BiFunction<String, String, OptionSpecBuilder> argumentBuilder) {
+        mixinArgSpec = argumentBuilder.apply("mixin", "Mixin config file name list").withRequiredArg();
+        mixinConfigArgSpec = argumentBuilder.apply("mixin.config", "Mixin config file name list").withRequiredArg();
+    }
+
+    @Override
+    public void argumentValues(OptionResult option) {
+        capturedArgs = Stream.concat(
+            option.values(mixinArgSpec).stream().flatMap(s -> Stream.of("--mixin", s)),
+            option.values(mixinConfigArgSpec).stream().flatMap(s -> Stream.of("--mixin.config", s))
+        ).toList();
+    }
+
+    @Override
     public void onLoad(IEnvironment env, Set<String> otherServices) {
         final var winner = env.getProperty(INSTALLED_VERSIONS).orElseThrow()
-                .entrySet()
-                .stream().sorted(Map.Entry.<Class<?>, ArtifactVersion>comparingByValue().reversed())
-                .findFirst()
-                .orElseThrow();
+            .entrySet()
+            .stream().sorted(Map.Entry.<Class<?>, ArtifactVersion>comparingByValue().reversed())
+            .findFirst()
+            .orElseThrow();
         if (winner.getKey() != getClass()) {
             Constants.LOG.info("Mixin Booster {} ({}) lost against version {} ({}). Skipping...", Constants.VERSION, getClass(), winner.getValue(), winner.getKey());
             return;
@@ -142,7 +155,7 @@ public class MixinTransformationService implements ITransformationService {
 
             // The actual init invocations
             mixinBootstrapStartMethod.invoke(null);
-            mixinPluginInitMethod.invoke(launchPlugin, environment, List.of());
+            mixinPluginInitMethod.invoke(launchPlugin, environment, this.capturedArgs);
         } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -157,7 +170,7 @@ public class MixinTransformationService implements ITransformationService {
             MixinEnvironment.getDefaultEnvironment().getRemappers().add(new MixinModlauncherRemapper());
         }
         return List.of(
-                new Resource(IModuleLayerManager.Layer.GAME, List.of(new GeneratedMixinClassesSecureJar()))
+            new Resource(IModuleLayerManager.Layer.GAME, List.of(new GeneratedMixinClassesSecureJar()))
         );
     }
 
