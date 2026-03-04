@@ -6,7 +6,6 @@ import cpw.mods.modlauncher.TransformationServiceDecorator;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import joptsimple.ArgumentAcceptingOptionSpec;
-import joptsimple.OptionSpec;
 import joptsimple.OptionSpecBuilder;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
@@ -22,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
-import java.util.stream.Stream;
 
 public class MixinTransformationService implements ITransformationService {
     public static final TypesafeMap.Key<Map<Class<?>, ArtifactVersion>> INSTALLED_VERSIONS =
@@ -87,6 +85,11 @@ public class MixinTransformationService implements ITransformationService {
 
     @Override
     public void onLoad(IEnvironment env, Set<String> otherServices) {
+        if (otherServices.contains("connector_loader")) {
+            Constants.LOG.info("Disabling Mixin Booster in favor of Connector");
+            return;
+        }
+
         final var winner = env.getProperty(INSTALLED_VERSIONS).orElseThrow()
             .entrySet()
             .stream().sorted(Map.Entry.<Class<?>, ArtifactVersion>comparingByValue().reversed())
